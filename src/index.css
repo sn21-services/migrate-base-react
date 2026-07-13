@@ -1,4 +1,16 @@
-/* TODO: change color according to design, overwrite */
-:root:root {
-  --adm-color-primary: #a062d4;
+@import 'tailwindcss';
+
+@theme {
+  --color-primary: #24ff16;
+  --color-primary-hover: #4096ff;
+
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-danger: #ff4d4f;
+
+  --color-background: #f5f5f5;
+  --color-surface: #ffffff;
+
+  --color-text: #1f1f1f;
+  --color-text-secondary: #666666;
 }
