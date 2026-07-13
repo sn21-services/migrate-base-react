@@ -1,4 +1,4 @@
-export type HomeType = {
+export type QueryParams = {
   name: string;
   email: string;
 };
