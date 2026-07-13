@@ -6,6 +6,7 @@ import axios, {
 
 import { STATUS_CODE } from '@/constants/app.constants';
 import { toSnakeCase, toCamel } from '@/helpers/convert-object.helpers';
+import { useAuthStore } from '@/features/auth/stores/auth.store';
 
 export const instanceApi = axios.create({
   baseURL: import.meta.env.VITE_BASE_API,
@@ -19,8 +20,7 @@ const requestInterceptor = (
     custom?: { isFormData?: boolean };
   }
 ) => {
-  // TODO: token, get from store zustand
-  const token = 'ABC';
+  const token = useAuthStore.getState().accessToken;
   const headers = {
     ...req.headers,
     Authorization: token ? `Bearer ${token}` : req.headers?.Authorization,
