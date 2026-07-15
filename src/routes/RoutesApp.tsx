@@ -1,5 +1,6 @@
 import { lazy, Suspense } from 'react';
 import { useRoutes } from 'react-router';
+import { Spin } from 'antd';
 
 import { LIST_ROUTES } from '@/routes/routes.config';
 import DefaultLayout from '@/layouts/DefaultLayout';
@@ -17,7 +18,7 @@ const createRoute = (route: RouteItemDef) => {
       {
         index: true,
         element: (
-          <Suspense fallback={<div>Loading page...</div>}>
+          <Suspense fallback={<Spin fullscreen />}>
             <Page />
           </Suspense>
         ),
