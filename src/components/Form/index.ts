@@ -15,7 +15,7 @@ export { default as TimePickerField } from './TimePickerField/TimePickerField';
 export { default as SwitchField } from './SwitchField/SwitchField';
 export { default as UploadField } from './UploadField/UploadField';
 export { default as TextAreaField } from './TextAreaField/TextAreaField';
-export { default as InputNumberField } from './InputNumberField/InputNumberFIeld';
+export { default as InputNumberField } from './InputNumberField/InputNumberField';
 
 import { FormContext } from './FormContext/FormContext';
 

@@ -1,15 +1,18 @@
-import { Link, Outlet } from 'react-router';
+import { Outlet } from 'react-router';
+
+import AppHeader from '@/components/AppHeader/AppHeader';
+import AppSidebarMenu from '@/components/AppSidebarMenu/AppSidebarMenu';
 
 const DefaultLayout = () => {
   return (
     <div id="default-layout">
-      <header className="p-3">
-        <Link to="/" className="text-primary">
-          Home
-        </Link>
-        <Link to="/todo">Todo</Link>
-      </header>
-      <Outlet />
+      <AppHeader />
+      <main className="flex mt-13.75">
+        <AppSidebarMenu />
+        <section className="flex-1 ml-50">
+          <Outlet />
+        </section>
+      </main>
 
       <footer>Footer</footer>
     </div>
