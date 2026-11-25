@@ -1362,6 +1362,11 @@ available-typed-arrays@^1.0.7:
   dependencies:
     possible-typed-array-names "^1.0.0"
 
+axios-auth-refresh@^5.0.2:
+  version "5.0.2"
+  resolved "https://registry.yarnpkg.com/axios-auth-refresh/-/axios-auth-refresh-5.0.2.tgz#a0726f615a2e7d1977429b6d9453db210c692975"
+  integrity sha512-1UvQMxwCR5Y2V7i7862kIQDbuWqw4LgWRjaxtFg9+bwKPIQW3kvh/Ay6uVYhUInAkPgN0rLzH0sU8ECd3qKPBQ==
+
 axios@^1.18.1:
   version "1.18.1"
   resolved "https://registry.yarnpkg.com/axios/-/axios-1.18.1.tgz#d63f9863bcd8938815c86f9e2abd380189d96dfe"

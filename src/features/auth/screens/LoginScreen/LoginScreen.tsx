@@ -22,7 +22,7 @@ const LoginScreen = () => {
     form.resetFields();
   };
   return (
-    <div className="flex h-100vh items-center justify-center">
+    <div className="flex h-screen items-center justify-center">
       <div className="border rounded-xl p-4">
         <h1 className="font-bold text-2xl text-center mb-2">Login</h1>
         <AppForm
