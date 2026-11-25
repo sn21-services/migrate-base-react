@@ -1,16 +1,32 @@
 import { lazy, Suspense } from 'react';
-import { useRoutes } from 'react-router';
+import { Navigate, useRoutes } from 'react-router';
 import { Spin } from 'antd';
 
 import { LIST_ROUTES } from '@/routes/routes.config';
 import DefaultLayout from '@/layouts/DefaultLayout';
 import type { RouteItemDef } from '@/types/routes.types';
+import { useAuthStore } from '@/features/auth';
 const NotFound = lazy(() => import('@/components/NotFound/NotFound'));
 
-const createRoute = (route: RouteItemDef) => {
+const PUBLIC_PATH = ['/login'];
+
+const createRoute = (route: RouteItemDef, accessToken: string | null) => {
   const Layout = route.layout ?? DefaultLayout;
   const Page = route.Component ?? NotFound;
+  const isPublicRoute = PUBLIC_PATH.includes(route.path ?? '');
 
+  if (!accessToken && !isPublicRoute) {
+    return {
+      path: route.path,
+      element: <Navigate to="/login" replace />,
+    };
+  }
+  if (accessToken && isPublicRoute) {
+    return {
+      path: route.path,
+      element: <Navigate to="/" replace />,
+    };
+  }
   return {
     path: route.path,
     element: <Layout />,
@@ -28,7 +44,8 @@ const createRoute = (route: RouteItemDef) => {
 };
 
 const RoutesApp = () => {
-  const routes = LIST_ROUTES.map(createRoute);
+  const accessToken = useAuthStore(state => state.accessToken);
+  const routes = LIST_ROUTES.map(route => createRoute(route, accessToken));
   return useRoutes(routes);
 };
 

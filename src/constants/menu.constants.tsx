@@ -4,6 +4,7 @@ import {
   DesktopOutlined,
   MailOutlined,
   PieChartOutlined,
+  ProductOutlined,
 } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import { Link } from 'react-router';
@@ -17,6 +18,11 @@ export const MENU_APP: MenuItem[] = [
     key: HomePathsEnum.HOME,
     icon: <PieChartOutlined />,
     label: <Link to={HomePathsEnum.HOME}>Trang chủ</Link>,
+  },
+  {
+    key: '/products',
+    icon: <ProductOutlined />,
+    label: <Link to="/products">Products</Link>,
   },
   {
     key: '/todo',

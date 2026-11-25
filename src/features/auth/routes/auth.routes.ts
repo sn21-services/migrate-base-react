@@ -2,7 +2,7 @@ import { lazy } from 'react';
 
 import type { RouteItemDef } from '@/types/routes.types';
 import { AuthPathsEnum } from '@/features/auth';
-import { BlankLayout } from '@/layouts';
+import { AuthLayout } from '@/layouts';
 
 const LOGIN_SCREEN: RouteItemDef = {
   id: 'LOGIN',
@@ -10,7 +10,7 @@ const LOGIN_SCREEN: RouteItemDef = {
   Component: lazy(
     () => import('@/features/auth/screens/LoginScreen/LoginScreen')
   ),
-  layout: BlankLayout,
+  layout: AuthLayout,
 };
 
 export const AUTH_ROUTES = [LOGIN_SCREEN];
