@@ -1,4 +1,7 @@
+import { useQuery } from '@tanstack/react-query';
 import type { TypeProductInfo } from '../types/product.types';
+import { ProductPathEnum } from '../constants/product.path';
+import { instanceApi } from '@/api/base-api';
 
 export const formatProductPayload = (
   data: TypeProductInfo
@@ -39,3 +42,16 @@ export const formatProductPayload = (
       Array.isArray(data.images) && data.images.length > 0 ? data.images : [],
   };
 };
+
+export function useCategoryList() {
+  const { data: categoryData = [], isLoading } = useQuery({
+    queryKey: ['categoryList'],
+    queryFn: async () => {
+      const res = await instanceApi.get<string[]>(
+        `${ProductPathEnum.PRODUCTS}/category-list`
+      );
+      return res.data;
+    },
+  });
+  return { categoryData, isLoading };
+}

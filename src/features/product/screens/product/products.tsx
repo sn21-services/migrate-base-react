@@ -43,11 +43,14 @@ import {
 import { productYupSchema } from '../../schemas/product.schemas';
 import { UploadOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router';
-import { formatProductPayload } from '../../services/product.services';
+import {
+  formatProductPayload,
+  useCategoryList,
+} from '../../services/product.services';
 
 export default function Products() {
   const [searchParams, setSearchParams] = useSearchParams();
-
+  const { categoryData, isLoading: isLoadingCategory } = useCategoryList();
   const searchText = searchParams.get('q') || '';
   const sortOption = searchParams.get('sort') || 'default';
   const currentPage = Number(searchParams.get('page')) || 1;
@@ -203,17 +206,7 @@ export default function Products() {
     const payload = formatProductPayload(data);
 
     if (editingItem) {
-      updateMutation.mutate(
-        { id: editingItem.id, data: payload },
-        {
-          onSuccess: () => {
-            message.success('Cập nhật sản phẩm thành công!');
-          },
-          onError() {
-            message.error('Cập nhật sản phẩm thất bại');
-          },
-        }
-      );
+      updateMutation.mutate({ id: editingItem.id, data: payload });
     } else addMutation.mutate(payload);
   };
 
@@ -562,14 +555,11 @@ export default function Products() {
               <FormField label="Danh mục" name="category">
                 <Select
                   placeholder="Chọn danh mục"
-                  options={[
-                    { value: 'smartphones', label: 'Smartphones' },
-                    { value: 'laptops', label: 'Laptops' },
-                    { value: 'fragrances', label: 'Fragrances' },
-                    { value: 'skincare', label: 'Skincare' },
-                    { value: 'groceries', label: 'Groceries' },
-                    { value: 'home-decoration', label: 'Home Decoration' },
-                  ]}
+                  loading={isLoadingCategory}
+                  options={categoryData.map(category => ({
+                    value: category,
+                    label: String(category).toUpperCase(),
+                  }))}
                 />
               </FormField>
             </div>
