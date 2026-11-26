@@ -27,6 +27,11 @@ export const useAuthProfile = () => {
   });
 };
 
+const GENDER_MAP: Record<string, 'Male' | 'Female' | 'Other'> = {
+  male: 'Male',
+  female: 'Female',
+};
+
 export const useLogin = () => {
   const { setAuth } = useAuthStore();
   const navigate = useNavigate();
@@ -36,11 +41,7 @@ export const useLogin = () => {
       const res = await Login(payload);
       const rawData = res.data;
       const formattedGender =
-        rawData.gender.toLowerCase() === 'male'
-          ? 'Male'
-          : rawData.gender.toLowerCase() === 'female'
-            ? 'Female'
-            : 'Other';
+        GENDER_MAP[rawData.gender.toLowerCase()] ?? 'Other';
       return {
         email: rawData.email,
         gender: formattedGender,
@@ -55,7 +56,7 @@ export const useLogin = () => {
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       const errorMsg =
-        error?.response?.data?.message ||
+        error?.response?.data?.message ??
         'Tên đăng nhập hoặc mật khẩu không đúng!';
       message.error(errorMsg);
     },

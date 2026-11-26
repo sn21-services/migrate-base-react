@@ -11,31 +11,20 @@ import { instanceApi } from '@/api/base-api';
 export const getProductsApi = (
   params: ProductQueryParams
 ): Promise<AxiosResponse<ProductListResponse>> => {
-  const searchParams = new URLSearchParams();
-  if (params.q?.trim()) {
-    searchParams.set('q', params.q.trim());
-  }
-  if (params.limit !== undefined) {
-    searchParams.set('limit', String(params.limit));
-  }
-  if (params.skip !== undefined) {
-    searchParams.set('skip', String(params.skip));
-  }
-  if (params.select?.trim()) {
-    searchParams.set('select', params.select.trim());
-  }
-  if (params.order) {
-    searchParams.set('order', params.order);
-  }
-  if (params.sortBy) {
-    searchParams.set('sortBy', params.sortBy);
-  }
-
-  const endpoint = params.q?.trim()
-    ? ProductsEndPoint.SEARCH
-    : ProductsEndPoint.GET_LIST;
-
-  return instanceApi.get(`${endpoint}?${searchParams.toString()}`);
+  return instanceApi.get(ProductsEndPoint.SEARCH, {
+    params,
+    paramsSerializer: {
+      serialize: (rawParams: Record<string, unknown>) => {
+        const searchParams = new URLSearchParams();
+        Object.entries(rawParams).forEach(([key, value]) => {
+          if (value !== undefined && value !== null && value !== '') {
+            searchParams.append(key, String(value));
+          }
+        });
+        return searchParams.toString();
+      },
+    },
+  });
 };
 
 export const GetProductDetailApi = (
@@ -53,7 +42,7 @@ export const addProductApi = (
 export const updateProductApi = (
   id: number | string,
   data: Partial<TypeProductInfo>
-): Promise<AxiosResponse<TypeProductInfo>> => {
+): Promise<AxiosResponse<ProductItem>> => {
   return instanceApi.put(ProductsEndPoint.UPDATE_PRODUCT(id), data);
 };
 

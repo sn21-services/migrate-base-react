@@ -9,13 +9,17 @@ type AuthState = {
   refreshToken: string | null;
 
   setAuth: (user: UserInfoType) => void;
-  setTokens: (Tokens: { accessToken: string; refreshToken: string }) => void;
+  setTokens: (Tokens: {
+    accessToken: string;
+    refreshToken: string;
+    user: UserInfoType;
+  }) => void;
   logout: () => void;
 };
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set, get) => ({
+    set => ({
       user: null,
       accessToken: null,
       refreshToken: null,
@@ -26,16 +30,12 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: user.refreshToken,
         }),
 
-      setTokens: ({ accessToken, refreshToken }) => {
-        const currentUser = get().user;
-        set({
+      setTokens: ({ accessToken, refreshToken, user }) =>
+        set(state => ({
           accessToken,
           refreshToken,
-          user: currentUser
-            ? { ...currentUser, accessToken, refreshToken }
-            : null,
-        });
-      },
+          user: user ?? state.user,
+        })),
       logout: () => {
         set({ accessToken: null, refreshToken: null, user: null });
         useAuthStore.persist.clearStorage();

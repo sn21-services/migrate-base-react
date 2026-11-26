@@ -21,7 +21,7 @@ export const instanceApi = axios.create({
 
 const requestInterceptor = (
   req: InternalAxiosRequestConfig & {
-    custom?: { isFormData?: boolean };
+    custom?: { isFormData?: boolean; skipSnakeCase: boolean };
   }
 ) => {
   const token = useAuthStore.getState().accessToken;
@@ -36,8 +36,11 @@ const requestInterceptor = (
   return {
     ...req,
     headers,
-    params: toSnakeCase(req.params, true),
-    data: toSnakeCase(req.data, true),
+    params:
+      req.params && !req.paramsSerializer
+        ? toSnakeCase(req.params, true)
+        : req.params,
+    data: req?.custom?.skipSnakeCase ? req.data : toSnakeCase(req.data, true),
   };
 };
 
@@ -53,7 +56,6 @@ const errorInterceptor = (error: AxiosError) => {
   return Promise.reject(error);
 };
 
-// 3. Hàm xử lý tự động Refresh Token cho axios-auth-refresh
 const refreshAuthLogic = async (failedRequest: AxiosError) => {
   const refreshToken = useAuthStore.getState().refreshToken;
 
@@ -63,7 +65,6 @@ const refreshAuthLogic = async (failedRequest: AxiosError) => {
   }
 
   try {
-    // Dùng axios gốc để gọi API refresh, tránh kích hoạt vòng lặp interceptor
     const res = await axios.post(
       AuthEndpoints.REFRESH,
       toSnakeCase(
@@ -72,7 +73,7 @@ const refreshAuthLogic = async (failedRequest: AxiosError) => {
           expiresInMins: 30,
         },
         true
-      ), // Chuyển payload sang snake_case giống requestInterceptor
+      ),
       {
         baseURL: BASE_URL_API,
         headers: {
@@ -81,7 +82,6 @@ const refreshAuthLogic = async (failedRequest: AxiosError) => {
       }
     );
 
-    // Chuyển dữ liệu trả về sang camelCase giống responseInterceptor
     const camelData = toCamel(res.data);
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
       camelData;
@@ -89,9 +89,9 @@ const refreshAuthLogic = async (failedRequest: AxiosError) => {
     useAuthStore.getState().setTokens({
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
+      user: camelData,
     });
 
-    // Cập nhật token mới cho request vừa bị lỗi 401 để thư viện tự gọi lại
     if (failedRequest.response?.config?.headers) {
       failedRequest.response.config.headers.Authorization = `Bearer ${newAccessToken}`;
     }
@@ -103,7 +103,6 @@ const refreshAuthLogic = async (failedRequest: AxiosError) => {
   }
 };
 
-// 4. Đăng ký các Interceptors (Lưu ý: đăng ký createAuthRefreshInterceptor trước errorInterceptor)
 instanceApi.interceptors.request.use(requestInterceptor);
 
 createAuthRefreshInterceptor(instanceApi, refreshAuthLogic, {

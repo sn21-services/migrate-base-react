@@ -1,12 +1,12 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   addProductApi,
   deletedProductApi,
   GetProductDetailApi,
   getProductsApi,
   updateProductApi,
-} from '../../api/product.qpi';
+} from '../../api/product.api';
 import type {
   ProductItem,
   ProductListResponse,
@@ -42,58 +42,79 @@ import {
 } from '@/components/Form';
 import { productYupSchema } from '../../schemas/product.schemas';
 import { UploadOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'react-router';
+import { formatProductPayload } from '../../services/product.services';
 
 export default function Products() {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchText = searchParams.get('q') || '';
+  const sortOption = searchParams.get('sort') || 'default';
+  const currentPage = Number(searchParams.get('page')) || 1;
+  const pageSize = Number(searchParams.get('limit')) || 10;
   const queryClient = useQueryClient();
   const [form] = useForm<TypeProductInfo>();
+  const [sortBy, order] =
+    sortOption !== 'default'
+      ? (sortOption.split('-') as [
+          ProductQueryParams['sortBy'],
+          ProductQueryParams['order'],
+        ])
+      : [undefined, undefined];
+  const queryParams: ProductQueryParams = {
+    q: searchParams.get('q') || '',
+    limit: pageSize,
+    skip: (currentPage - 1) * pageSize,
+    sortBy,
+    order,
+  };
   const [editingItem, setEditingItem] = useState<ProductItem | null>(null);
-  const [searchText, setSearchText] = useState<string>('');
-  const [sortOption, setSortOption] = useState<string>('default');
+  const [inputValue, setInputValue] = useState<string>('');
   const [open, setOpen] = useState<boolean>(false);
 
   const [thumbnailFileList, setThumbnailFileList] = useState<UploadFile[]>([]);
   const [imagesFileList, setImagesFileList] = useState<UploadFile[]>([]);
 
-  const [pagination, setPagination] = useState({
-    current: 1,
-    pageSize: 10,
-  });
-
   const [selectedProductId, setSelectedProductId] = useState<number | null>(
     null
   );
+  const updateUrlParams = useCallback(
+    (newParams: Record<string, string | null>) => {
+      setSearchParams(prevParams => {
+        const nextParams = new URLSearchParams(prevParams);
+        Object.entries(newParams).forEach(([key, value]) => {
+          if (
+            !value ||
+            value === 'default' ||
+            (key === 'page' && value === '1') ||
+            (key === 'limit' && value === '10')
+          ) {
+            nextParams.delete(key);
+          } else {
+            nextParams.set(key, value);
+          }
+        });
+        return nextParams;
+      });
+    },
+    [setSearchParams]
+  );
+  useEffect(() => {
+    if (inputValue === searchText) return;
+    const timer = setTimeout(() => {
+      updateUrlParams({ q: inputValue.trim(), page: '1' });
+      return () => clearTimeout(timer);
+    }, 400);
+  }, [inputValue, searchText, updateUrlParams]);
 
-  const getSortParams = (): Pick<ProductQueryParams, 'sortBy' | 'order'> => {
-    if (sortOption === 'default') return {};
-    const [sortBy, order] = sortOption.split('-') as [
-      ProductQueryParams['sortBy'],
-      ProductQueryParams['order'],
-    ];
-    return { sortBy, order };
-  };
   const {
     data: productData,
     isError,
     refetch,
   } = useQuery<ProductListResponse>({
-    queryKey: [
-      'products',
-      searchText,
-      sortOption,
-      pagination.current,
-      pagination.pageSize,
-    ],
+    queryKey: ['products', queryParams],
     queryFn: async () => {
-      const skip = (pagination.current - 1) * pagination.pageSize;
-      const { sortBy, order } = getSortParams();
-
-      const res = await getProductsApi({
-        ...(searchText.trim() ? { q: searchText.trim() } : {}),
-        limit: pagination.pageSize,
-        skip,
-        sortBy,
-        order,
-      });
+      const res = await getProductsApi(queryParams);
 
       return res.data;
     },
@@ -112,6 +133,13 @@ export default function Products() {
   const products: ProductItem[] = productData?.products || [];
 
   const handleCloseModal = () => {
+    thumbnailFileList.forEach(file => {
+      if (file.url?.startsWith('blob:')) URL.revokeObjectURL(file.url);
+    });
+    imagesFileList.forEach(file => {
+      if (file.url?.startsWith('blob:')) URL.revokeObjectURL(file.url);
+    });
+
     setOpen(false);
     setEditingItem(null);
     setThumbnailFileList([]);
@@ -172,42 +200,20 @@ export default function Products() {
   });
 
   const handleSubmit = (data: TypeProductInfo) => {
-    const payload: TypeProductInfo = {
-      title: data.title?.trim() || '',
-      description: data.description?.trim() || '',
-      category: data.category || '',
-      price: Number(data.price) || 0,
-      discountPercentage: Number(data.discountPercentage) || 0,
-      rating: Number(data.rating) || 0,
-      stock: Number(data.stock) || 0,
-      tags: data.tags || [],
-      brand: data.brand?.trim() || '',
-      sku: data.sku?.trim() || '',
-      weight: Number(data.weight) || 0,
-      dimensions: {
-        width: Number(data.dimensions?.width) || 0,
-        height: Number(data.dimensions?.height) || 0,
-        depth: Number(data.dimensions?.depth) || 0,
-      },
-      warrantyInformation: data.warrantyInformation || '',
-      shippingInformation: data.shippingInformation || '',
-      availabilityStatus: Number(data.stock) > 0 ? 'In Stock' : 'Out of Stock',
-      reviews: data.reviews || [],
-      returnPolicy: data.returnPolicy || '',
-      minimumOrderQuantity: Number(data.minimumOrderQuantity) || 1,
-      meta: {
-        createdAt: data.meta?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        barcode: data.meta?.barcode || '',
-        qrCode: data.meta?.qrCode || '',
-      },
-      thumbnail: data.thumbnail || '',
-      images:
-        Array.isArray(data.images) && data.images.length > 0 ? data.images : [],
-    };
+    const payload = formatProductPayload(data);
 
     if (editingItem) {
-      updateMutation.mutate({ id: editingItem.id, data: payload });
+      updateMutation.mutate(
+        { id: editingItem.id, data: payload },
+        {
+          onSuccess: () => {
+            message.success('Cập nhật sản phẩm thành công!');
+          },
+          onError() {
+            message.error('Cập nhật sản phẩm thất bại');
+          },
+        }
+      );
     } else addMutation.mutate(payload);
   };
 
@@ -234,57 +240,21 @@ export default function Products() {
       }))
     );
     setOpen(true);
-    form.setFieldsValue({
-      title: record.title,
-      description: record.description,
-      category: record.category,
-      price: Number(record.price),
-      discountPercentage: Number(record.discountPercentage),
-      rating: Number(record.rating),
-      stock: Number(record.stock),
-      tags: record.tags,
-      brand: record.brand,
-      sku: record.sku,
-      weight: Number(record.weight),
-      dimensions: {
-        width: Number(record.dimensions?.width),
-        height: Number(record.dimensions?.height),
-        depth: Number(record.dimensions?.depth),
-      },
-      warrantyInformation: record.warrantyInformation,
-      shippingInformation: record.shippingInformation,
-      availabilityStatus:
-        Number(record.stock) > 0 ? 'In Stock' : 'Out of Stock',
-      reviews: record.reviews,
-      returnPolicy: record.returnPolicy,
-      minimumOrderQuantity: Number(record.minimumOrderQuantity) || 1,
-      meta: {
-        createdAt: record.meta?.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        barcode: record.meta?.barcode,
-        qrCode: record.meta?.qrCode,
-      },
-      thumbnail: record.thumbnail,
-      images: record.images || [],
-    });
+    const payload = formatProductPayload(record);
+    form.setFieldsValue(payload);
   };
 
   const handleSearch = (value: string) => {
-    setSearchText(value);
-    setPagination(prev => ({ ...prev, current: 1 }));
+    setInputValue(value);
+    updateUrlParams({ q: value.trim(), page: '1' });
   };
 
   const handleSort = (value: string) => {
-    setSortOption(value);
-    setPagination(prev => ({ ...prev, current: 1 }));
+    updateUrlParams({ sort: value, page: '1' });
   };
   const handleReset = () => {
-    setSearchText('');
-    setSortOption('default');
-    setPagination({
-      current: 1,
-      pageSize: 10,
-    });
+    setInputValue('');
+    setSearchParams({});
   };
 
   const columns: ColumnsType<ProductItem> = [
@@ -426,9 +396,9 @@ export default function Products() {
             placeholder="Nhập tên sản phẩm"
             enterButton="Tìm kiếm"
             allowClear
-            value={searchText}
+            value={inputValue}
             onSearch={handleSearch}
-            onChange={e => handleSearch(e.target.value)}
+            onChange={e => setInputValue(e.target.value)}
             style={{ flex: 1 }}
           />
 
@@ -457,12 +427,12 @@ export default function Products() {
           rowKey={'id'}
           dataSource={products}
           pagination={{
-            current: pagination.current,
-            pageSize: pagination.pageSize,
+            current: currentPage,
+            pageSize: pageSize,
             total: productData?.total,
             showSizeChanger: true,
-            onChange: (page, pageSize) => {
-              setPagination({ current: page, pageSize });
+            onChange: (page, size) => {
+              updateUrlParams({ page: String(page), limit: String(size) });
             },
           }}
           columns={columns}
@@ -498,8 +468,9 @@ export default function Products() {
                     src={imagePreview || productDetail?.thumbnail}
                   />
                   <div className="flex gap-2 items-center mt-2">
-                    {productDetail?.images.map(src => (
+                    {productDetail?.images.map((src, index) => (
                       <img
+                        key={index}
                         onClick={() => setImagePreview(src)}
                         className="w-15 h-15 rounded object-cover overflow-hidden"
                         src={src}

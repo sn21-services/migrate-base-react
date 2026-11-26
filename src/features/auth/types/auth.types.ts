@@ -23,7 +23,7 @@ export type LoginResponseType = {
   email: string;
   firstName: string;
   lastName: string;
-  gender: 'Male' | 'Female' | 'Other' | string;
+  gender: 'Male' | 'Female' | 'Other';
   image: string;
 };
 
