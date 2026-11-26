@@ -43,6 +43,29 @@ export const formatProductPayload = (
   };
 };
 
+export const DEFAULT_FORM_VALUES: Partial<TypeProductInfo> = {
+  title: '',
+  description: '',
+  category: 'smartphones',
+  price: 0,
+  discountPercentage: 0,
+  rating: 0,
+  stock: 1,
+  tags: [],
+  brand: '',
+  sku: '',
+  weight: 0,
+  dimensions: { width: 0, height: 0, depth: 0 },
+  warrantyInformation: '1 year warranty',
+  shippingInformation: 'Ships in 1-2 business days',
+  availabilityStatus: 'In Stock',
+  reviews: [],
+  returnPolicy: '30 days return policy',
+  minimumOrderQuantity: 1,
+  thumbnail: '',
+  images: [],
+};
+
 export function useCategoryList() {
   const { data: categoryData = [], isLoading } = useQuery({
     queryKey: ['categoryList'],
