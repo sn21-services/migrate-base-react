@@ -1,8 +1,9 @@
-import { Button, Descriptions, Modal, Image, Spin, Tag, Rate } from 'antd';
+import { Button, Descriptions, Modal, Image, Spin } from 'antd';
 import { useState } from 'react';
 import type { ProductItem } from '../types/product.types';
+import { objectKey } from '../services/product.detail';
 
-interface Props {
+interface ProductDetailProps {
   open: boolean;
   onClose: () => void;
   product?: ProductItem;
@@ -13,13 +14,13 @@ export default function ProductDetailModal({
   onClose,
   product,
   isLoading,
-}: Props) {
+}: ProductDetailProps) {
   const [imagePreview, setImagePreview] = useState<string>('');
 
   return (
     <Modal
       width={700}
-      title={product?.title || 'Chi tiết sản phẩm'}
+      title={product?.title ?? 'Chi tiết sản phẩm'}
       open={open}
       onCancel={onClose}
       footer={[
@@ -28,59 +29,41 @@ export default function ProductDetailModal({
         </Button>,
       ]}
     >
-      {isLoading ? (
-        <div className="flex justify-center py-10">
-          <Spin size="small" />
-        </div>
-      ) : (
-        product && (
-          <div className="grid grid-cols-2">
+      <Spin size="medium" spinning={isLoading}>
+        {product && (
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Image
                 width={200}
                 height={200}
                 className="rounded object-cover overflow-hidden"
-                src={imagePreview || product?.thumbnail}
+                src={imagePreview || product.thumbnail}
               />
               <div className="flex gap-2 items-center mt-2">
-                {product?.images.map((src, index) => (
+                {product.images?.map((src, index) => (
                   <img
                     key={index}
                     onClick={() => setImagePreview(src)}
-                    className="w-15 h-15 rounded object-cover overflow-hidden"
+                    className="w-15 h-15 rounded object-cover overflow-hidden cursor-pointer"
                     src={src}
+                    alt={`preview-${index}`}
                   />
                 ))}
               </div>
             </div>
 
             <Descriptions column={1}>
-              <Descriptions.Item label="Thương hiệu">
-                {product.brand}
-              </Descriptions.Item>
-
-              <Descriptions.Item label="Tên sản phẩm">
-                {product.title}
-              </Descriptions.Item>
-              <Descriptions.Item label="Mô tả">
-                {product.description}
-              </Descriptions.Item>
-              <Descriptions.Item label="Danh mục">
-                <Tag color={'yellow'}>{product.category}</Tag>
-              </Descriptions.Item>
-              <Descriptions.Item label="Giá">
-                <span className="text-red-500 font-bold">${product.price}</span>
-              </Descriptions.Item>
-              <Descriptions.Item label="Đánh giá">
-                <Rate disabled allowHalf defaultValue={product.rating} />
-              </Descriptions.Item>
-              <Descriptions.Item label="Tồn kho">
-                {product.stock}
-              </Descriptions.Item>
+              {objectKey.map(item => (
+                <Descriptions.Item key={item.key} label={item.label}>
+                  {item.render
+                    ? item.render(product)
+                    : String(product[item.key] ?? '')}
+                </Descriptions.Item>
+              ))}
             </Descriptions>
           </div>
-        )
-      )}
+        )}
+      </Spin>
     </Modal>
   );
 }

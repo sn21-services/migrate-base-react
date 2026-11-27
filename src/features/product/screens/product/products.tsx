@@ -204,9 +204,9 @@ export default function Products() {
         key={
           openFormModal
             ? editingItem
-              ? `edit-${editingItem.id}`
-              : 'create'
-            : 'closed'
+              ? `form-edit-${editingItem.id}`
+              : 'form-create'
+            : 'form-closed'
         }
         open={openFormModal}
         editingItem={editingItem}

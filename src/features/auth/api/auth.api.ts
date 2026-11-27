@@ -1,10 +1,12 @@
-import type { AxiosResponse } from 'axios';
+import type { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 import { instanceApi } from '@/api/base-api';
 import { type ApiResponse } from '@/types/app.types';
 
 import {
   type LoginResponseType,
+  type RefreshTokenPayload,
+  type RefreshTokenResponse,
   type TypeAuthProfile,
   type TypeLogin,
   type UserInfoType,
@@ -22,3 +24,10 @@ export const Login = (
 ): Promise<AxiosResponse<LoginResponseType>> => {
   return instanceApi.post(AuthEndpoints.LOGIN, payload);
 };
+
+export const Refresh = (
+  payload: RefreshTokenPayload
+): Promise<AxiosResponse<RefreshTokenResponse>> =>
+  instanceApi.post(AuthEndpoints.REFRESH, payload, {
+    skipAuthRefresh: true,
+  } as AxiosRequestConfig);

@@ -2,6 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import { useAuthStore } from '@/features/auth/stores/auth.store';
 import {
+  type GENDER,
   Login,
   type TypeAuthProfile,
   type TypeLogin,
@@ -27,7 +28,7 @@ export const useAuthProfile = () => {
   });
 };
 
-const GENDER_MAP: Record<string, 'Male' | 'Female' | 'Other'> = {
+const GENDER_MAP: Record<string, GENDER> = {
   male: 'Male',
   female: 'Female',
 };
@@ -40,13 +41,10 @@ export const useLogin = () => {
     mutationFn: async (payload: TypeLogin): Promise<UserInfoType> => {
       const res = await Login(payload);
       const rawData = res.data;
-      const formattedGender =
-        GENDER_MAP[rawData.gender.toLowerCase()] ?? 'Other';
+
       return {
-        email: rawData.email,
-        gender: formattedGender,
-        accessToken: rawData.accessToken,
-        refreshToken: rawData.refreshToken,
+        ...rawData,
+        gender: GENDER_MAP[rawData.gender.toLowerCase()] ?? 'Other',
       };
     },
     onSuccess: (data: UserInfoType) => {

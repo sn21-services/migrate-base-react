@@ -7,23 +7,14 @@ import type {
 } from '../types/product.types';
 import { ProductsEndPoint } from '../constants/products.endpoint';
 import { instanceApi } from '@/api/base-api';
+import { CamelParamsSerializer } from '../helpers/api.helpers';
 
 export const getProductsApi = (
   params: ProductQueryParams
 ): Promise<AxiosResponse<ProductListResponse>> => {
   return instanceApi.get(ProductsEndPoint.SEARCH, {
     params,
-    paramsSerializer: {
-      serialize: (rawParams: Record<string, unknown>) => {
-        const searchParams = new URLSearchParams();
-        Object.entries(rawParams).forEach(([key, value]) => {
-          if (value !== undefined && value !== null && value !== '') {
-            searchParams.append(key, String(value));
-          }
-        });
-        return searchParams.toString();
-      },
-    },
+    paramsSerializer: CamelParamsSerializer,
   });
 };
 

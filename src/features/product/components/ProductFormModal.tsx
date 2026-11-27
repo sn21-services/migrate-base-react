@@ -24,7 +24,7 @@ import {
 } from '../services/product.services';
 import { productYupSchema } from '../schemas/product.schemas';
 
-interface Props {
+interface ProductFormModalProps {
   open: boolean;
   editingItem: ProductItem | null;
   isSubmitting: boolean;
@@ -37,12 +37,12 @@ export default function ProductFormModal({
   isSubmitting,
   onSubmit,
   onClose,
-}: Props) {
+}: ProductFormModalProps) {
   const [thumbnailFileList, setThumbnailFileList] = useState<UploadFile[]>(
     editingItem?.thumbnail
       ? [
           {
-            uid: '-1',
+            uid: window.crypto.randomUUID(),
             name: 'thumbnail.png',
             status: 'done',
             url: editingItem.thumbnail,
@@ -53,7 +53,7 @@ export default function ProductFormModal({
 
   const [imagesFileList, setImagesFileList] = useState<UploadFile[]>(() =>
     (editingItem?.images || []).map((url, idx) => ({
-      uid: `-${idx + 2}`,
+      uid: window.crypto.randomUUID(),
       name: `image-${idx + 1}.png`,
       status: 'done',
       url,
@@ -111,6 +111,9 @@ export default function ProductFormModal({
   const handleFinish = (data: TypeProductInfo) => {
     onSubmit(formatProductPayload(data));
   };
+  if (editingItem) {
+    form.setFieldsValue(editingItem);
+  }
   return (
     <Modal
       open={open}
@@ -123,9 +126,7 @@ export default function ProductFormModal({
       <AppForm
         form={form}
         onFinish={handleFinish}
-        initialValues={
-          editingItem ? formatProductPayload(editingItem) : DEFAULT_FORM_VALUES
-        }
+        initialValues={DEFAULT_FORM_VALUES}
         schema={productYupSchema}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">

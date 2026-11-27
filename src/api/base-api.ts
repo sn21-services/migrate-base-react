@@ -8,7 +8,6 @@ import createAuthRefreshInterceptor from 'axios-auth-refresh';
 import { STATUS_CODE } from '@/constants/app.constants';
 import { toSnakeCase, toCamel } from '@/helpers/convert-object.helpers';
 import { useAuthStore } from '@/features/auth/stores/auth.store';
-import { AuthEndpoints } from '@/features/auth';
 
 const BASE_URL_API = import.meta.env.VITE_BASE_API;
 
@@ -57,7 +56,7 @@ const errorInterceptor = (error: AxiosError) => {
 };
 
 const refreshAuthLogic = async (failedRequest: AxiosError) => {
-  const refreshToken = useAuthStore.getState().refreshToken;
+  const { refreshToken, user } = useAuthStore.getState();
 
   if (!refreshToken) {
     useAuthStore.getState().logout();
@@ -65,31 +64,14 @@ const refreshAuthLogic = async (failedRequest: AxiosError) => {
   }
 
   try {
-    const res = await axios.post(
-      AuthEndpoints.REFRESH,
-      toSnakeCase(
-        {
-          refreshToken,
-          expiresInMins: 30,
-        },
-        true
-      ),
-      {
-        baseURL: BASE_URL_API,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const camelData = toCamel(res.data);
+    const res = await Refresh({ refreshToken, expiresInMins: 30 });
     const { accessToken: newAccessToken, refreshToken: newRefreshToken } =
-      camelData;
+      res.data;
 
     useAuthStore.getState().setTokens({
       accessToken: newAccessToken,
       refreshToken: newRefreshToken,
-      user: camelData,
+      user: user!,
     });
 
     if (failedRequest.response?.config?.headers) {

@@ -8,7 +8,7 @@ export type UserInfoType = Omit<TypeAuthProfile, 'password'> & {
   accessToken: string;
   refreshToken: string;
 };
-
+export type GENDER = 'Male' | 'Female' | 'Other';
 export type TypeLogin = {
   username: string;
   password: string;
@@ -23,7 +23,7 @@ export type LoginResponseType = {
   email: string;
   firstName: string;
   lastName: string;
-  gender: 'Male' | 'Female' | 'Other';
+  gender: GENDER;
   image: string;
 };
 

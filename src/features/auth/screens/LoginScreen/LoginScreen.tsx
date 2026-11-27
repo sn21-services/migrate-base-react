@@ -14,10 +14,11 @@ const LoginScreen = () => {
   const { mutate: loginMutate, isPending } = useLogin();
 
   const handleSubmit = (data: TypeLogin) => {
+    const { username, password, expiresInMins } = data;
     loginMutate({
-      username: data.username.trim(),
-      password: data.password.trim(),
-      expiresInMins: data.expiresInMins,
+      username,
+      password,
+      expiresInMins,
     });
     form.resetFields();
   };
@@ -44,9 +45,6 @@ const LoginScreen = () => {
               type={'password'}
               placeholder="Enter password"
             />
-          </FormField>
-          <FormField name="expiresInMins" label="ExpiresInMins">
-            <InputField type={'number'} placeholder="Enter expiresInMins" />
           </FormField>
           <FormField>
             <div className="flex items-center justify-center">

@@ -1,7 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import type { TypeProductInfo } from '../types/product.types';
+import type { ProductItem, TypeProductInfo } from '../types/product.types';
 import { ProductPathEnum } from '../constants/product.path';
 import { instanceApi } from '@/api/base-api';
+import type { ReactNode } from 'react';
 
 export const formatProductPayload = (
   data: TypeProductInfo
@@ -78,3 +79,9 @@ export function useCategoryList() {
   });
   return { categoryData, isLoading };
 }
+
+export type objectItem = {
+  key: keyof ProductItem;
+  label: string;
+  render?: (product: ProductItem) => ReactNode;
+};
