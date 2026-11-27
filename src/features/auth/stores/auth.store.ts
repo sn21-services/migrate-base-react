@@ -6,8 +6,14 @@ import type { UserInfoType } from '@/features/auth';
 type AuthState = {
   user: UserInfoType | null;
   accessToken: string | null;
+  refreshToken: string | null;
 
   setAuth: (user: UserInfoType) => void;
+  setTokens: (Tokens: {
+    accessToken: string;
+    refreshToken: string;
+    user: UserInfoType;
+  }) => void;
   logout: () => void;
 };
 
@@ -16,13 +22,22 @@ export const useAuthStore = create<AuthState>()(
     set => ({
       user: null,
       accessToken: null,
+      refreshToken: null,
       setAuth: user =>
         set({
           user,
           accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
         }),
+
+      setTokens: ({ accessToken, refreshToken, user }) =>
+        set(state => ({
+          accessToken,
+          refreshToken,
+          user: user ?? state.user,
+        })),
       logout: () => {
-        set({ accessToken: null, user: null });
+        set({ accessToken: null, refreshToken: null, user: null });
         useAuthStore.persist.clearStorage();
       },
     }),
@@ -30,6 +45,7 @@ export const useAuthStore = create<AuthState>()(
       name: 'auth',
       partialize: state => ({
         accessToken: state.accessToken,
+        refreshToken: state.refreshToken,
       }),
       storage: createJSONStorage(() => localStorage),
     }
